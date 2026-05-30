@@ -16,14 +16,26 @@ The Hugging Face Space is public for portfolio review. Source code is visible, w
 
 ![Live tech-doc-rag chat demo](../assets/chat-demo.png)
 
+## Upload Ingestion + Dynamic FAISS
+
+The live viewer supports temporary document uploads for Markdown, text, PDF, and DOCX files. An uploaded file is parsed, chunked, embedded, and merged into a session-scoped FAISS index while the app is running. That means the reviewer can upload a document and immediately ask retrieval questions against it without rebuilding the bundled documentation index.
+
+![Uploaded document ingested into the live demo](../assets/upload-support.png)
+
+## Built-In Tracing
+
+TRACE is built into the app, not added as an external screenshot. Each live request can show the prompt, LLM decisions, tool calls, retrieval steps, upload-aware document matches, and final answer construction in the side panel while the SSE chat response streams.
+
+![Built-in trace panel for uploaded-document retrieval](../assets/tracing-built-in.png)
+
 ## What This Project Shows
 
 - End-to-end request flow from browser UI to FastAPI to LangGraph tools
 - Agent-decided ReAct tool orchestration with LangGraph
 - Local document embedding with Hugging Face sentence transformers and FAISS
-- Session-scoped upload support that builds a temporary retrieval index per upload
+- Upload ingestion pipeline that parses, chunks, embeds, and adds session documents to FAISS dynamically
 - Server-sent event streaming for token output and tool progress
-- TRACE event building so viewers can inspect routing, retrieval, web search, uploads, and final-answer steps
+- Built-in TRACE event construction so viewers can inspect routing, retrieval, web search, uploads, and final-answer steps
 - DuckDuckGo/DDG web search without a paid search API key
 - URL fetching for secondary evidence from search results
 - Restricted Python execution for calculations
@@ -51,7 +63,7 @@ LangGraph ReAct loop
   - agent node chooses the next action
   - tool node executes retrieval/search/fetch/python
         |
-        +-- retrieve_docs -> bundled FAISS index + uploaded-session FAISS index
+        +-- retrieve_docs -> bundled FAISS index + dynamic uploaded-session FAISS index
         +-- search_web    -> DDG web results
         +-- fetch_url      -> secondary URL fetch from search results
         +-- run_python     -> restricted Python calculations
@@ -59,7 +71,7 @@ LangGraph ReAct loop
 OpenAI-compatible LLM endpoint
 ```
 
-The graph loops between an LLM-powered agent node and a tool executor until the model returns a final answer. The SSE endpoint streams both answer chunks and structured TRACE events, so a reviewer can see what the agent is doing instead of treating the response as a black box. The same backend serves the browser UI, non-streaming chat, streaming chat, document listing, upload, and reset endpoints.
+The graph loops between an LLM-powered agent node and a tool executor until the model returns a final answer. The SSE endpoint streams both answer chunks and structured TRACE events, so a reviewer can see what the agent is doing instead of treating the response as a black box. Uploaded documents go through the same retrieval tool after the app builds a temporary session FAISS index from the uploaded content. The same backend serves the browser UI, non-streaming chat, streaming chat, document listing, upload, and reset endpoints.
 
 ## Current Stack
 
@@ -101,7 +113,8 @@ The production container is built from the repository root, not this subdirector
 ```text
 How does StateGraph work in LangGraph?
 How can the TRACE panel help evaluate a workflow?
+Upload a document and ask: what did the uploaded notes say?
+After uploading, ask: how did the dynamic FAISS update affect retrieval?
 What changed recently in LangGraph?
-Upload this PDF and summarize the deployment requirements.
 What is 17 * 23?
 ```
