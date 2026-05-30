@@ -6,7 +6,7 @@ build-backend = "hatchling.build"
 name = "tech-doc-rag"
 version = "0.1.0"
 description = "Documentation RAG agent with LangGraph"
-readme = "README.md"
+readme = "../README.md"
 requires-python = ">=3.9"
 dependencies = [
     "langgraph>=0.2.0",

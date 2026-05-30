@@ -1,6 +1,8 @@
 # tech-doc-rag
 
-Viewer-friendly documentation RAG agent that demonstrates the core architecture behind a production agentic retrieval app: SSE streaming, trace visibility, local document embeddings, and session-scoped upload retrieval.
+Viewer-friendly documentation RAG agent that demonstrates the core architecture behind a production agentic retrieval app: LangGraph graph design, Python tool execution, search integration, SSE streaming, trace visibility, local document embeddings, and session-scoped upload retrieval.
+
+The project started with LangGraph for graph design, then added Python execution and DuckDuckGo search/fetch tools so the agent can choose between retrieval, current web context, URL evidence, and calculations. Tracing was built later and integrated into the graph with AI assistance, so each run exposes the agent's prompts, tool decisions, tool results, and final answer path. The frontend viewer is fully AI-built as a static HTML/CSS/JavaScript interface served by FastAPI.
 
 The agent answers questions from bundled LangGraph/tracing documentation, can search the web when current information is useful, can fetch result URLs for supporting evidence, can run restricted Python calculations, and can answer against session-uploaded Markdown, text, PDF, or DOCX files.
 
@@ -30,15 +32,14 @@ TRACE is built into the app, not added as an external screenshot. Each live requ
 
 ## What This Project Shows
 
-- End-to-end request flow from browser UI to FastAPI to LangGraph tools
-- Agent-decided ReAct tool orchestration with LangGraph
-- Local document embedding with Hugging Face sentence transformers and FAISS
+- LangGraph-first graph design using a ReAct loop with explicit agent, tool-execution, and answer-extraction nodes
+- Python tool integration for restricted calculations inside the same graph loop
+- DuckDuckGo search and URL-fetch tools for current information and supporting evidence
 - Upload ingestion pipeline that parses, chunks, embeds, and adds session documents to FAISS dynamically
 - Server-sent event streaming for token output and tool progress
-- Built-in TRACE event construction so viewers can inspect routing, retrieval, web search, uploads, and final-answer steps
-- DuckDuckGo/DDG web search without a paid search API key
-- URL fetching for secondary evidence from search results
-- Restricted Python execution for calculations
+- AI-assisted TRACE integration inside the graph so viewers can inspect routing, retrieval, web search, uploads, and final-answer steps
+- Fully AI-built frontend viewer with chat, upload controls, streaming output, and a trace panel
+- Local document embedding with Hugging Face sentence transformers and FAISS
 - Public-demo hardening for upload size, file type, trace redaction, and error handling
 - Hugging Face Spaces deployment from the repo-root Dockerfile
 
@@ -71,7 +72,7 @@ LangGraph ReAct loop
 OpenAI-compatible LLM endpoint
 ```
 
-The graph loops between an LLM-powered agent node and a tool executor until the model returns a final answer. The SSE endpoint streams both answer chunks and structured TRACE events, so a reviewer can see what the agent is doing instead of treating the response as a black box. Uploaded documents go through the same retrieval tool after the app builds a temporary session FAISS index from the uploaded content. The same backend serves the browser UI, non-streaming chat, streaming chat, document listing, upload, and reset endpoints.
+The graph loops between an LLM-powered agent node and a tool executor until the model returns a final answer. The first design pass focused on the LangGraph structure; Python execution, DDG search, URL fetch, document retrieval, and upload-aware FAISS retrieval were then exposed as graph tools. TRACE was built and integrated into the graph with AI assistance, turning graph state into visible SSE events so a reviewer can see what the agent is doing instead of treating the response as a black box. Uploaded documents go through the same retrieval tool after the app builds a temporary session FAISS index from the uploaded content. The same backend serves the fully AI-built browser UI, non-streaming chat, streaming chat, document listing, upload, and reset endpoints.
 
 ## Current Stack
 
@@ -79,7 +80,7 @@ The graph loops between an LLM-powered agent node and a tool executor until the 
 |---|---|
 | Agent orchestration | LangGraph ReAct loop |
 | API | FastAPI + Uvicorn |
-| Frontend | Static HTML served by FastAPI |
+| Frontend | Fully AI-built static HTML served by FastAPI |
 | LLM | OpenAI-compatible chat endpoint |
 | Embeddings | Hugging Face `sentence-transformers/all-MiniLM-L6-v2` by default |
 | Vector store | Local FAISS index |
@@ -88,6 +89,16 @@ The graph loops between an LLM-powered agent node and a tool executor until the 
 | Deployment | Hugging Face Spaces Docker app |
 
 Pinecone, Tavily, and LangSmith accounts are not required for the current implementation.
+
+## Deployment Cost
+
+| Cost area | Current setup | Cost |
+|---|---|---:|
+| Hugging Face hosting | Public HF Space using the free CPU tier | `$0` |
+| LLM usage | Demo runs through the configured OpenAI-compatible endpoint with no paid usage billed for this public demo setup | `$0` |
+| Search API | DuckDuckGo/DDG HTML search, no paid Tavily key required | `$0` |
+| Overall project deployment | Hosting + current demo LLM/search setup | `$0` |
+
 
 ## Key Files
 
@@ -102,8 +113,7 @@ tech-doc-rag/
 │   └── main.py        # terminal chat entry point
 ├── data/              # bundled markdown documentation corpus
 ├── tests/             # graph, upload, endpoint, and regression tests
-├── .faiss_index/      # local vector index used by the deployed app
-└── README.md
+└── .faiss_index/      # local vector index used by the deployed app
 ```
 
 The production container is built from the repository root, not this subdirectory. The root `Dockerfile` copies `api/`, `frontend/`, `tech-doc-rag/src/`, `tech-doc-rag/data/`, and `tech-doc-rag/.faiss_index/` into the image.
