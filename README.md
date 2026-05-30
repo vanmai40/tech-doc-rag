@@ -4,7 +4,7 @@ Viewer-friendly documentation RAG agent that demonstrates the core architecture 
 
 The project started with LangGraph for graph design, then added Python execution and DuckDuckGo search/fetch tools so the agent can choose between retrieval, current web context, URL evidence, and calculations. Tracing was built later and integrated into the graph with AI assistance, so each run exposes the agent's prompts, tool decisions, tool results, and final answer path. The frontend viewer is fully AI-built as a static HTML/CSS/JavaScript interface served by FastAPI.
 
-The agent answers questions from bundled LangGraph/tracing documentation, can search the web when current information is useful, can fetch result URLs for supporting evidence, can run restricted Python calculations, and can answer against session-uploaded Markdown, text, PDF, or DOCX files.
+The agent answers questions from bundled LangGraph/tracing documentation, can search the web when current information is useful, can fetch result URLs for supporting evidence, can run restricted Python calculations, and can answer against session-uploaded Markdown, text, PDF, or DOCX files. The deployed demo routes LLM calls through OpenRouter's OpenAI-compatible API using free model options, which keeps the public demo inexpensive while preserving the same provider-agnostic LLM interface.
 
 ## Live Demo
 
@@ -69,7 +69,7 @@ LangGraph ReAct loop
         +-- fetch_url      -> secondary URL fetch from search results
         +-- run_python     -> restricted Python calculations
         v
-OpenAI-compatible LLM endpoint
+OpenRouter OpenAI-compatible LLM endpoint
 ```
 
 The graph loops between an LLM-powered agent node and a tool executor until the model returns a final answer. The first design pass focused on the LangGraph structure; Python execution, DDG search, URL fetch, document retrieval, and upload-aware FAISS retrieval were then exposed as graph tools. TRACE was built and integrated into the graph with AI assistance, turning graph state into visible SSE events so a reviewer can see what the agent is doing instead of treating the response as a black box. Uploaded documents go through the same retrieval tool after the app builds a temporary session FAISS index from the uploaded content. The same backend serves the fully AI-built browser UI, non-streaming chat, streaming chat, document listing, upload, and reset endpoints.
@@ -81,7 +81,7 @@ The graph loops between an LLM-powered agent node and a tool executor until the 
 | Agent orchestration | LangGraph ReAct loop |
 | API | FastAPI + Uvicorn |
 | Frontend | Fully AI-built static HTML served by FastAPI |
-| LLM | OpenAI-compatible chat endpoint |
+| LLM | OpenRouter routing through an OpenAI-compatible chat endpoint, using free model options for the public demo |
 | Embeddings | Hugging Face `sentence-transformers/all-MiniLM-L6-v2` by default |
 | Vector store | Local FAISS index |
 | Web search | DuckDuckGo/DDG HTML search |
@@ -95,7 +95,7 @@ Pinecone, Tavily, and LangSmith accounts are not required for the current implem
 | Cost area | Current setup | Cost |
 |---|---|---:|
 | Hugging Face hosting | Public HF Space using the free CPU tier | `$0` |
-| LLM usage | Demo runs through the configured OpenAI-compatible endpoint with no paid usage billed for this public demo setup | `$0` |
+| LLM usage | OpenRouter free-model routing through the configured OpenAI-compatible endpoint; no paid LLM usage is billed for the current public demo setup | `$0` |
 | Search API | DuckDuckGo/DDG HTML search, no paid Tavily key required | `$0` |
 | Overall project deployment | Hosting + current demo LLM/search setup | `$0` |
 
